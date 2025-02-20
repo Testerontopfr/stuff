@@ -1,3 +1,4 @@
+local TouchInputService = game:GetService("TouchInputService")
 local rs = game:GetService("RunService")
 local cankillaura
 local CombatStaminaToggle
@@ -14,6 +15,8 @@ local remotename = "hit"
 local db = false
 local antiragdoll = false
 local noblood = false
+
+local breakparrytoggle 
 
 
 local player = game:GetService("Players").LocalPlayer
@@ -33,6 +36,10 @@ local stunhooked = false
 local antitouchdone = false
 local antitouch 
 
+local weapondelayval
+
+local canweapondelay = false
+
 local stunboolvalue = nil
 local parryboolvalue = nil
 
@@ -45,7 +52,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 
 local Window = Rayfield:CreateWindow({
-    Name = "Lidar hub | Melees and blood 0.01",
+    Name = "Lidar hub | Melees and blood 0.12",
     Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
     LoadingTitle = "Melees and Blood",
     LoadingSubtitle = "Lidar Hub",
@@ -123,6 +130,16 @@ local Label = InfoTab:CreateLabel("Testerontopfr on Gitub", "github", Color3.fro
         cankillaura = Value
     end,
  })
+
+ local BreakParryToggle = CombatTab:CreateToggle({
+    Name = "Break Parry",
+    CurrentValue = false,
+    Flag = "KillAuraToggle1", 
+    Callback = function(Value)
+        breakparrytoggle = Value 
+    end,
+ })
+
 
 local DamageSlider = CombatTab:CreateSlider({
     Name = "Damage Multiplier",
@@ -205,6 +222,19 @@ local DamageSlider = CombatTab:CreateSlider({
     end,
  })
  
+ local DelaySlider = CombatTab:CreateSlider({
+    Name = "Weapon Delay",
+    Range = {0, 10},
+    Increment = 0.2,
+    Suffix = "S Cooldown",
+    CurrentValue = 1,
+    Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        canweapondelay = true
+        weapondelayval = Value
+    end,
+ })
+
 
 
  local PerformanceSection = CombatTab:CreateSection("Performance")
@@ -295,6 +325,8 @@ local function killaura()
 
                           if v.Name ~= "Skybe6009" or v.Name ~= "Rustsn2738" then
                             if v.Character:FindFirstChild('HumanoidRootPart') then 
+
+                                --killaura
                                 if (v.Character.HumanoidRootPart.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < 20 and v.Character.Humanoid.Health > 0 then
                                     if v.Character:FindFirstChild("IsParry").Value == false and cankillaura == true then
                                         wait(.1)
@@ -310,6 +342,34 @@ local function killaura()
                                         wait(.3)
                                     end
                                 end 
+
+
+                                --break parry
+                                if (v.Character.HumanoidRootPart.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 10 and v.Character.Humanoid.Health > 0 then
+                                    if v.Character:FindFirstChild("IsParry").Value == true and breakparrytoggle == true then
+                                        wait(.03)
+                                        local args = {
+                                            [1] = v.Character:FindFirstChild("Humanoid"),
+                                            [2] = v.Character:FindFirstChild("HumanoidRootPart").Position
+                                        }
+                                        if player.Character:FindFirstChild("Fists") then
+                                           
+                                        else
+                                            if player.Character:FindFirstChild("CharacterServer") then
+                                                    if player.Character.CharacterServer:FindFirstChild("punchHit") then
+                                                        game:GetService("Players").LocalPlayer.Character.CharacterServer.punchHit:FireServer(unpack(args)) 
+                                                    end
+                                            end
+                                              
+
+                                        end    
+                                    end
+
+                                end 
+
+
+
+
                             end
 
                         end
@@ -389,6 +449,15 @@ local function nodelayloop()
                 
             end
 
+
+                if character:FindFirstChildWhichIsA("Tool") then 
+                    wait(.1)
+                    local tool = character:FindFirstChildWhichIsA("Tool")
+                        if tool:FindFirstChild("delay") and canweapondelay == true then
+                            tool.delay.Value = weapondelayval
+                        
+                        end
+                end
 
             if jumptoggle == true then 
                 character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
