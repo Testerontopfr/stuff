@@ -1,2 +1,2 @@
 # stuff
-i dont own anything
+i dont own some of these
