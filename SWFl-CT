@@ -47,7 +47,7 @@ local function getplayercar()
         for _, Descendant in v:GetDescendants() do
             if Descendant.ClassName == "StringValue" and Descendant.Name == "carOwner" and Descendant.Value == player.Name then
                 playercar = v
-                print("FoundPlayerCar")
+                --print("FoundPlayerCar")
                 break
             end
         end
@@ -92,7 +92,15 @@ local function setsuspension(Wheel, Setting, Value)
     end
 end
 
-
+local function IsPlayerCar(Car)
+    task.wait(.5)
+    for i,v in Car:GetDescendants() do
+        if v.ClassName == "StringValue" and v.Value == player.Name then
+            return true
+        end
+    end
+    return false
+end
 
 
 --print("Done")
@@ -112,7 +120,7 @@ local Window =
         Subtitle = "Southwest florida",
         Icon = NebulaIcons:GetIcon("car", "Lucide"),
         LoadingSettings = {Title = "Lidar", Subtitle = "Initializing | By testerdevv on dc"},
-        FileSettings = {ConfigFolder = "Lidar-Mojave"},
+        FileSettings = {ConfigFolder = "Lidar-SouthwestFlorida"},
         KeySystem = false
     }
 )
@@ -627,9 +635,7 @@ QoLGB:CreateToggle({
             addedprox = true
             for i,v in sessionvehicles:GetChildren() do
         
-                        if v.Name == player.Name.."-Car" then
-                        print("Found player car denied")
-                        else
+                    if not (IsPlayerCar(v)) then
                         if v:FindFirstChild("DriveSeat") then
                             local newprox = Instance.new("ProximityPrompt", v.DriveSeat)
                             newprox.RequiresLineOfSight = false
@@ -649,8 +655,7 @@ QoLGB:CreateToggle({
                                     newprox.Enabled = false
                                 end
                             end)
-                        end
-                        
+                        end   
                     end
 
             end
@@ -812,23 +817,18 @@ local SettingsGB = SettingsTab:CreateGroupbox({Name = "Main"}, "MAIN")
 Starlight:LoadAutoloadConfig()
 --autoloadMods = {}
 
-sessionvehicles.ChildAdded:Connect(function (v)
-    if autoloadToggle == true then
-        if v.Name == player.Name.."-Car" then
-            local module = v:WaitForChild("A-Chassis Tune", 3)
-            local reqModule = require(module)
-            for iValue, vValue in autoloadMods do
-                reqModule[iValue] = vValue
-
-            end
-
-        end
+sessionvehicles.ChildAdded:Connect(function(v)
+    --print(v, IsPlayerCar(v))
+    if IsPlayerCar(v) and autoloadToggle == true then
+        
+                local module = v:WaitForChild("A-Chassis Tune", 1)
+                local reqModule = require(module)
+                for iValue, vValue in autoloadMods do
+                    reqModule[iValue] = vValue             
+                end
     end
+    if (not IsPlayerCar(v)) and StealCarToggle == true then
 
-    if StealCarToggle == true then
-        if v.Name == player.Name.."-Car" then
-            print("Found player car denied")
-            else
             if v:FindFirstChild("DriveSeat") then
                 local newprox = Instance.new("ProximityPrompt", v.DriveSeat)
                 newprox.RequiresLineOfSight = false
@@ -843,15 +843,12 @@ sessionvehicles.ChildAdded:Connect(function (v)
                 end)
                 v.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function ()
                     if v.DriveSeat.Occupant == nil then
-
                         newprox.Enabled = true
                         else
                         newprox.Enabled = false
                     end
                 end)
-            end
-            
-        end
+            end   
     end
 end)
 
@@ -867,7 +864,7 @@ end
 player.CharacterAdded:Connect(function()
     Char = player.Character
     humanoid = Char:WaitForChild("Humanoid")
-    print("Assigned Character")
+    --print("Assigned Character")
 end)
 
 local oldmeta ; oldmeta = hookmetamethod(game, "__newindex", function(self, index, key)
